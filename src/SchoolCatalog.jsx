@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-const courses = "../public/api/courses.json";
 
-export default function SchoolCatalog() {
+function useGetCourses() {
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
@@ -10,10 +9,32 @@ export default function SchoolCatalog() {
       .then((data) => setCourses(data));
   }, []);
 
+  return courses;
+}
+
+export default function SchoolCatalog() {
+  let courses = useGetCourses();
+
+  const [filter, setFilter] = useState("");
+
+  const filteredData = courses.filter((item) => {
+    const lowerFilter = filter.toLowerCase();
+    return (
+      (item.courseName &&
+        item.courseName.toLowerCase().startsWith(lowerFilter)) ||
+      (item.courseNumber &&
+        String(item.courseNumber).toLowerCase().startsWith(lowerFilter))
+    );
+  });
+
   return (
     <div className="school-catalog">
       <h1>School Catalog</h1>
-      <input type="text" placeholder="Search" />
+      <input
+        type="text"
+        onChange={(e) => setFilter(e.target.value)}
+        placeholder="Search"
+      />
       <table>
         <thead>
           <tr>
@@ -26,13 +47,13 @@ export default function SchoolCatalog() {
           </tr>
         </thead>
         <tbody>
-          {courses.map((courses) => (
-            <tr>
-              <td key={courses.trimester}>{courses.trimester}</td>
-              <td key={courses.courseNumber}>{courses.courseNumber}</td>
-              <td key={courses.courseName}>{courses.courseName}</td>
-              <td key={courses.semesterCredits}>{courses.semesterCredits}</td>
-              <td key={courses.totalClockHours}>{courses.totalClockHours}</td>
+          {filteredData.map((courses) => (
+            <tr key={courses.courseName}>
+              <td>{courses.trimester}</td>
+              <td>{courses.courseNumber}</td>
+              <td>{courses.courseName}</td>
+              <td>{courses.semesterCredits}</td>
+              <td>{courses.totalClockHours}</td>
               <td>
                 <button>Enroll</button>
               </td>

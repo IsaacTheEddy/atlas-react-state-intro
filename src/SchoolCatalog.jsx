@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+const PAGE_SIZE = 5;
+
 function useGetCourses() {
   const [courses, setCourses] = useState([]);
 
@@ -15,7 +17,12 @@ function useGetCourses() {
 export default function SchoolCatalog() {
   let courses = useGetCourses();
 
+  const [sort, setSort] = useState("trimester");
+  const [direction, setDirection] = useState("asc");
+
   const [filter, setFilter] = useState("");
+
+  const [page, setPage] = useState(1);
 
   const filteredData = courses.filter((item) => {
     const lowerFilter = filter.toLowerCase();
@@ -26,6 +33,43 @@ export default function SchoolCatalog() {
         String(item.courseNumber).toLowerCase().startsWith(lowerFilter))
     );
   });
+
+  const handleSortingChange = (field) => {
+    const sortOrder = sort === field && direction === "asc" ? "desc" : "asc";
+    setSort(field);
+    setDirection(sortOrder);
+  };
+
+  const sortedData = filteredData.sort((a, b) => {
+    if (sort === "trimester") {
+      return (a.trimester - b.trimester) * (direction === "desc" ? -1 : 1);
+    } else if (sort === "courseNumber") {
+      return (
+        a[sort].localeCompare(b.courseNumber) * (direction === "desc" ? -1 : 1)
+      );
+    } else if (sort === "courseName") {
+      return (
+        a[sort].localeCompare(b.courseName) * (direction === "desc" ? -1 : 1)
+      );
+    } else if (sort === "semesterCredits") {
+      return (
+        (a.semesterCredits - b.semesterCredits) *
+        (direction === "desc" ? -1 : 1)
+      );
+    } else if (sort === "totalClockHours") {
+      return (
+        (a.totalClockHours - b.totalClockHours) *
+        (direction === "desc" ? -1 : 1)
+      );
+    }
+  });
+
+  const currentPage = sortedData.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
+  const hasMore = sortedData.length > page * PAGE_SIZE;
+  const hasLess = page > 1;
 
   return (
     <div className="school-catalog">
@@ -38,16 +82,24 @@ export default function SchoolCatalog() {
       <table>
         <thead>
           <tr>
-            <th>Trimester</th>
-            <th>Course Number</th>
-            <th>Courses Name</th>
-            <th>Semester Credits</th>
-            <th>Total Clock Hours</th>
+            <th onClick={() => handleSortingChange("trimester")}>Trimester</th>
+            <th onClick={() => handleSortingChange("courseNumber")}>
+              Course Number
+            </th>
+            <th onClick={() => handleSortingChange("courseName")}>
+              Courses Name
+            </th>
+            <th onClick={() => handleSortingChange("semesterCredits")}>
+              Semester Credits
+            </th>
+            <th onClick={() => handleSortingChange("totalClockHours")}>
+              Total Clock Hours
+            </th>
             <th>Enroll</th>
           </tr>
         </thead>
         <tbody>
-          {filteredData.map((courses) => (
+          {currentPage.map((courses) => (
             <tr key={courses.courseName}>
               <td>{courses.trimester}</td>
               <td>{courses.courseNumber}</td>
@@ -62,8 +114,12 @@ export default function SchoolCatalog() {
         </tbody>
       </table>
       <div className="pagination">
-        <button>Previous</button>
-        <button>Next</button>
+        <button disabled={!hasLess} onClick={() => setPage(page - 1)}>
+          Previous
+        </button>
+        <button disabled={!hasMore} onClick={() => setPage(page + 1)}>
+          Next
+        </button>
       </div>
     </div>
   );

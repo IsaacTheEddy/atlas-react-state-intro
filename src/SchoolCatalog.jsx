@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import { AppContext } from "./App";
 
 const PAGE_SIZE = 5;
 
@@ -15,6 +16,8 @@ function useGetCourses() {
 }
 
 export default function SchoolCatalog() {
+  const { enrollCourse } = useContext(AppContext);
+
   let courses = useGetCourses();
 
   const [sort, setSort] = useState("trimester");
@@ -99,15 +102,15 @@ export default function SchoolCatalog() {
           </tr>
         </thead>
         <tbody>
-          {currentPage.map((courses) => (
-            <tr key={courses.courseName}>
-              <td>{courses.trimester}</td>
-              <td>{courses.courseNumber}</td>
-              <td>{courses.courseName}</td>
-              <td>{courses.semesterCredits}</td>
-              <td>{courses.totalClockHours}</td>
+          {currentPage.map((course) => (
+            <tr key={course.courseName || course.courseNumber}>
+              <td>{course.trimester}</td>
+              <td>{course.courseNumber}</td>
+              <td>{course.courseName}</td>
+              <td>{course.semesterCredits}</td>
+              <td>{course.totalClockHours}</td>
               <td>
-                <button>Enroll</button>
+                <button onClick={() => enrollCourse(course)}>Enroll</button>
               </td>
             </tr>
           ))}
